@@ -9,20 +9,23 @@ const path = require('path');
 const PORT = process.env.PORT || 3001;
 
 // Get directory where server.js is located
-// If running from root: mini-app/
-// If running from mini-app/: current directory
+// Determine if we're running from root or from mini-app/
+const currentDir = process.cwd();
 let SERVE_DIR;
-try {
-    // Try to get __dirname (works when file is loaded as module)
-    SERVE_DIR = __dirname;
-} catch (e) {
-    // Fallback: assume we're in mini-app/ directory
-    SERVE_DIR = process.cwd();
-    // If we're in root, go to mini-app/
-    if (!fs.existsSync(path.join(SERVE_DIR, 'index.html'))) {
-        SERVE_DIR = path.join(SERVE_DIR, 'mini-app');
-    }
+
+// Check if index.html exists in current directory
+if (fs.existsSync(path.join(currentDir, 'index.html'))) {
+    // We're in mini-app/ directory
+    SERVE_DIR = currentDir;
+} else if (fs.existsSync(path.join(currentDir, 'mini-app', 'index.html'))) {
+    // We're in root, serve from mini-app/
+    SERVE_DIR = path.join(currentDir, 'mini-app');
+} else {
+    // Fallback: assume we're in mini-app/
+    SERVE_DIR = currentDir;
 }
+
+console.log(`Serving from: ${SERVE_DIR}`);
 const MIME_TYPES = {
     '.html': 'text/html',
     '.js': 'application/javascript',
