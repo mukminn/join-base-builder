@@ -1,0 +1,45 @@
+========================================
+CARA PAKAI - BASE BUILDERS DECEMBER
+========================================
+
+1. DOUBLE-CLICK FILE: mini-app\START-HERE.bat
+
+2. TUNGGU sampai muncul:
+   "🚀 Server running at http://localhost:9000/"
+
+3. BUKA BROWSER dan akses:
+   http://localhost:9000
+
+4. JANGAN TUTUP WINDOW TERMINAL!
+   Biarkan server running.
+
+========================================
+JIKA TIDAK BISA:
+========================================
+
+A. Cek Node.js terinstall:
+   - Buka CMD/PowerShell
+   - Ketik: node --version
+   - Harus muncul versi (contoh: v24.12.0)
+
+B. Jika port 9000 sudah digunakan:
+   - Edit file: mini-app\server.js
+   - Ganti: const PORT = 9000;
+   - Jadi: const PORT = 9001;
+   - Save, lalu jalankan START-HERE.bat lagi
+
+C. Clear browser cache:
+   - Tekan Ctrl+Shift+Delete
+   - Clear cache
+   - Refresh page
+
+========================================
+SUDAH DEPLOY KE VERCEL:
+========================================
+
+Mini App sudah online di:
+https://join-base-builder.vercel.app
+
+Bisa langsung test di URL tersebut!
+
+========================================

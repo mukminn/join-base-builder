@@ -42,16 +42,23 @@ const server = http.createServer((req, res) => {
     console.log(`${req.method} ${req.url}`);
 
     // Parse URL
-    let filePath = path.join(SERVE_DIR, req.url);
+    let filePath;
     if (req.url === '/' || req.url === '') {
         filePath = path.join(SERVE_DIR, 'index.html');
+    } else {
+        // Remove leading slash and query string
+        let cleanUrl = req.url.split('?')[0];
+        if (cleanUrl.startsWith('/')) {
+            cleanUrl = cleanUrl.substring(1);
+        }
+        filePath = path.join(SERVE_DIR, cleanUrl);
     }
     
-    // Remove query string
-    filePath = filePath.split('?')[0];
+    // Normalize path
+    filePath = path.normalize(filePath);
     
     // Security: prevent directory traversal
-    if (!filePath.startsWith(SERVE_DIR)) {
+    if (!filePath.startsWith(path.normalize(SERVE_DIR))) {
         res.writeHead(403, { 'Content-Type': 'text/html' });
         res.end('<h1>403 - Forbidden</h1>', 'utf-8');
         return;
