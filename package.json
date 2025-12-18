@@ -9,6 +9,8 @@
     "deploy:base": "hardhat run scripts/deploy.js --network base",
     "deploy:base-sepolia": "hardhat run scripts/deploy.js --network baseSepolia",
     "dev": "node mini-app/server.js",
+    "dev:3001": "node mini-app/server.js",
+    "dev:3002": "PORT=3002 node mini-app/server.js",
     "serve": "node mini-app/server.js",
     "start": "node mini-app/server.js"
   },

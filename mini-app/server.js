@@ -5,7 +5,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3001;
 const MIME_TYPES = {
     '.html': 'text/html',
     '.js': 'application/javascript',
@@ -52,4 +52,13 @@ server.listen(PORT, () => {
     console.log(`\n🚀 Server running at http://localhost:${PORT}/`);
     console.log(`📱 Open in browser: http://localhost:${PORT}/\n`);
     console.log('Press Ctrl+C to stop the server\n');
+}).on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(`\n❌ Port ${PORT} is already in use!`);
+        console.log(`💡 Try using a different port:`);
+        console.log(`   PORT=3002 node mini-app/server.js\n`);
+        process.exit(1);
+    } else {
+        throw err;
+    }
 });
