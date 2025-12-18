@@ -8,11 +8,11 @@
     "test": "hardhat test",
     "deploy:base": "hardhat run scripts/deploy.js --network base",
     "deploy:base-sepolia": "hardhat run scripts/deploy.js --network baseSepolia",
-    "dev": "node mini-app/server.js",
-    "dev:3001": "node mini-app/server.js",
-    "dev:3002": "PORT=3002 node mini-app/server.js",
-    "serve": "node mini-app/server.js",
-    "start": "node mini-app/server.js"
+    "dev": "cd mini-app && node server.js",
+    "dev:3001": "cd mini-app && node server.js",
+    "dev:3002": "cd mini-app && PORT=3002 node server.js",
+    "serve": "cd mini-app && node server.js",
+    "start": "cd mini-app && node server.js"
   },
   "keywords": [
     "base",
