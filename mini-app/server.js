@@ -6,7 +6,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 9000;
 
 // Get directory where server.js is located
 // Determine if we're running from root or from mini-app/
@@ -86,7 +86,7 @@ server.listen(PORT, () => {
     if (err.code === 'EADDRINUSE') {
         console.error(`\n❌ Port ${PORT} is already in use!`);
         console.log(`💡 Try using a different port:`);
-        console.log(`   PORT=3002 node mini-app/server.js\n`);
+        console.log(`   PORT=9001 node mini-app/server.js\n`);
         process.exit(1);
     } else {
         throw err;
