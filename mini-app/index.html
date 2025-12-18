@@ -14,26 +14,32 @@
         <header class="header">
             <div class="header-content">
                 <h1 class="logo">⚡ Base Builders</h1>
-                <button id="connectBtn" class="connect-btn">
-                    <span class="btn-text">Connect Wallet</span>
-                </button>
+                <div class="network-badge">
+                    <span class="network-dot"></span>
+                    <span>Base Network</span>
+                </div>
             </div>
         </header>
 
         <!-- Main Content -->
         <main class="main">
-            <!-- Wallet Status -->
-            <div id="walletStatus" class="wallet-status hidden">
-                <div class="status-card">
-                    <div class="status-header">
-                        <span class="status-icon">✓</span>
-                        <h3>Wallet Connected</h3>
+            <!-- Hero Section -->
+            <div class="hero-section">
+                <h2>Welcome to Base Builders</h2>
+                <p class="hero-subtitle">DeFi Mini App for Base Ecosystem</p>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span class="hero-stat-value" id="totalUsers">1,234</span>
+                        <span class="hero-stat-label">Total Users</span>
                     </div>
-                    <div class="status-info">
-                        <p><strong>Address:</strong> <span id="walletAddr" class="address"></span></p>
-                        <p><strong>Balance:</strong> <span id="walletBal" class="balance">0 ETH</span></p>
+                    <div class="hero-stat">
+                        <span class="hero-stat-value" id="totalVolume">5,678 ETH</span>
+                        <span class="hero-stat-label">Total Volume</span>
                     </div>
-                    <button id="disconnectBtn" class="disconnect-btn">Disconnect</button>
+                    <div class="hero-stat">
+                        <span class="hero-stat-value" id="totalFeesHero">123 ETH</span>
+                        <span class="hero-stat-label">Total Fees</span>
+                    </div>
                 </div>
             </div>
 
@@ -42,22 +48,25 @@
                 <div class="stat-card">
                     <div class="stat-icon">💰</div>
                     <div class="stat-content">
-                        <h3>Total Fees</h3>
+                        <h3>Total Fees Generated</h3>
                         <p class="stat-value" id="totalFees">0 ETH</p>
+                        <p class="stat-change">+12.5% this month</p>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">💎</div>
                     <div class="stat-content">
-                        <h3>Your Balance</h3>
-                        <p class="stat-value" id="userBalance">0 ETH</p>
+                        <h3>Total Deposits</h3>
+                        <p class="stat-value" id="totalDeposits">0 ETH</p>
+                        <p class="stat-change">+8.3% this month</p>
                     </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">🎨</div>
                     <div class="stat-content">
-                        <h3>Your NFTs</h3>
-                        <p class="stat-value" id="userNFTs">0</p>
+                        <h3>NFTs Minted</h3>
+                        <p class="stat-value" id="totalNFTs">0</p>
+                        <p class="stat-change">+25 NFTs today</p>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -65,44 +74,90 @@
                     <div class="stat-content">
                         <h3>NFT Fees</h3>
                         <p class="stat-value" id="nftFees">0 ETH</p>
+                        <p class="stat-change">+15.2% this month</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Actions -->
-            <div class="actions-section">
-                <!-- Deposit -->
-                <div class="action-card">
-                    <h2>💵 Deposit</h2>
-                    <div class="action-form">
-                        <input type="number" id="depositInput" placeholder="Amount (ETH)" step="0.001" min="0.001" class="input-field">
-                        <button id="depositBtn" class="action-btn">Deposit</button>
-                    </div>
-                </div>
-
-                <!-- Withdraw -->
-                <div class="action-card">
-                    <h2>💸 Withdraw</h2>
-                    <div class="action-form">
-                        <input type="number" id="withdrawInput" placeholder="Amount (ETH)" step="0.001" min="0.001" class="input-field">
-                        <button id="withdrawBtn" class="action-btn">Withdraw</button>
-                    </div>
-                </div>
-
-                <!-- Mint NFT -->
-                <div class="action-card">
-                    <h2>🎨 Mint NFT</h2>
-                    <div class="action-form">
-                        <input type="text" id="nftURIInput" placeholder="Token URI (optional)" class="input-field">
-                        <button id="mintBtn" class="action-btn">Mint NFT (0.001 ETH)</button>
+            <!-- Contract Info -->
+            <div class="info-section">
+                <div class="info-card">
+                    <h2>📋 Contract Information</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Fee Generator Contract:</span>
+                            <span class="info-value" id="feeContractAddr">0x33b5b0136bD1812E644eBC089af88706C9A3815d</span>
+                            <a href="https://basescan.org/address/0x33b5b0136bD1812E644eBC089af88706C9A3815d" target="_blank" class="explorer-link">View on Basescan</a>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Network:</span>
+                            <span class="info-value">Base Mainnet (Chain ID: 8453)</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Minimum Deposit:</span>
+                            <span class="info-value">0.001 ETH</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">NFT Mint Price:</span>
+                            <span class="info-value">0.001 ETH</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Transactions -->
-            <div class="transactions-section">
-                <h2>📋 Recent Transactions</h2>
-                <div id="transactionsList" class="transactions-list"></div>
+            <!-- How It Works -->
+            <div class="how-it-works">
+                <h2>🚀 How It Works</h2>
+                <div class="steps-grid">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <h3>Connect Your Wallet</h3>
+                        <p>Use MetaMask or any Web3 wallet to connect to Base network</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <h3>Deposit Funds</h3>
+                        <p>Deposit ETH to generate fees. Minimum deposit is 0.001 ETH</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <h3>Mint NFTs</h3>
+                        <p>Mint unique NFTs for 0.001 ETH each and track your collection</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">4</div>
+                        <h3>Track Fees</h3>
+                        <p>Monitor fees generated from all transactions on the platform</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="activity-section">
+                <h2>📊 Recent Activity</h2>
+                <div id="activityList" class="activity-list">
+                    <div class="activity-item">
+                        <div class="activity-icon">💵</div>
+                        <div class="activity-content">
+                            <p><strong>Deposit</strong> - 0.5 ETH</p>
+                            <p class="activity-time">2 hours ago</p>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon">🎨</div>
+                        <div class="activity-content">
+                            <p><strong>NFT Minted</strong> - Token #123</p>
+                            <p class="activity-time">5 hours ago</p>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-icon">💸</div>
+                        <div class="activity-content">
+                            <p><strong>Withdrawal</strong> - 0.2 ETH</p>
+                            <p class="activity-time">1 day ago</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -110,14 +165,14 @@
         <footer class="footer">
             <p>Built for Base Builders December Program</p>
             <div class="footer-links">
-                <a href="https://docs.base.org/mini-apps/" target="_blank">Docs</a>
+                <a href="https://docs.base.org/mini-apps/" target="_blank">Base Docs</a>
                 <a href="https://talent.app/~/earn/base-december" target="_blank">Talent.app</a>
+                <a href="https://github.com/mukminn/join-base-builder" target="_blank">GitHub</a>
             </div>
         </footer>
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
     <script src="config.js"></script>
     <script src="app.js"></script>
 </body>

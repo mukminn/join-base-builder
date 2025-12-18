@@ -61,31 +61,29 @@ body {
     background-clip: text;
 }
 
-.connect-btn {
-    background: var(--gradient);
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
+.network-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
     border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
 }
 
-.connect-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-}
-
-.connect-btn:active {
-    transform: translateY(0);
-}
-
-.connect-btn.connected {
+.network-dot {
+    width: 8px;
+    height: 8px;
     background: var(--success);
-    cursor: default;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
 }
 
 /* Main */
@@ -97,86 +95,52 @@ body {
     width: 100%;
 }
 
-/* Wallet Status */
-.wallet-status {
+/* Hero Section */
+.hero-section {
+    text-align: center;
+    padding: 3rem 0;
+    margin-bottom: 3rem;
+}
+
+.hero-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
     margin-bottom: 2rem;
-    animation: slideDown 0.3s ease;
 }
 
-.wallet-status.hidden {
-    display: none;
+.hero-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+    margin-top: 2rem;
 }
 
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.status-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.5rem;
+.hero-stat {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-}
-
-.status-header {
-    display: flex;
     align-items: center;
-    gap: 0.75rem;
 }
 
-.status-icon {
-    width: 32px;
-    height: 32px;
-    background: var(--success);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: bold;
+.hero-stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
 }
 
-.status-info p {
-    margin: 0.5rem 0;
-    color: var(--text-secondary);
-}
-
-.address {
-    font-family: 'Courier New', monospace;
-    color: var(--accent);
-    font-weight: 600;
-}
-
-.balance {
-    color: var(--success);
-    font-weight: 600;
-}
-
-.disconnect-btn {
-    background: transparent;
-    color: var(--error);
-    border: 1px solid var(--error);
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    cursor: pointer;
+.hero-stat-label {
     font-size: 0.9rem;
-    transition: all 0.3s ease;
-    align-self: flex-start;
-}
-
-.disconnect-btn:hover {
-    background: var(--error);
-    color: white;
+    color: var(--text-secondary);
 }
 
 /* Stats Grid */
@@ -228,130 +192,206 @@ body {
     color: var(--text-primary);
 }
 
-/* Actions */
-.actions-section {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+.stat-change {
+    font-size: 0.85rem;
+    color: var(--success);
+    margin-top: 0.25rem;
 }
 
-.action-card {
+/* Info Section */
+.info-section {
+    margin-bottom: 3rem;
+}
+
+.info-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 16px;
-    padding: 1.5rem;
+    padding: 2rem;
 }
 
-.action-card h2 {
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
+.info-card h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
     color: var(--text-primary);
 }
 
-.action-form {
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.info-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.info-value {
+    font-family: 'Courier New', monospace;
+    color: var(--accent);
+    font-size: 0.9rem;
+    word-break: break-all;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.info-value:hover {
+    color: var(--accent-hover);
+}
+
+.explorer-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+    transition: color 0.3s ease;
+}
+
+.explorer-link:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+}
+
+/* How It Works */
+.how-it-works {
+    margin-bottom: 3rem;
+}
+
+.how-it-works h2 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.step-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.step-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+}
+
+.step-number {
+    width: 50px;
+    height: 50px;
+    background: var(--gradient);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    margin: 0 auto 1rem;
+}
+
+.step-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+}
+
+.step-card p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+/* Activity Section */
+.activity-section {
+    margin-bottom: 3rem;
+}
+
+.activity-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.activity-list {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
-.input-field {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 0.75rem 1rem;
-    color: var(--text-primary);
-    font-size: 1rem;
-    transition: all 0.3s ease;
-}
-
-.input-field:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.action-btn {
-    background: var(--accent);
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.action-btn:hover:not(:disabled) {
-    background: var(--accent-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-}
-
-.action-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Transactions */
-.transactions-section {
-    margin-top: 2rem;
-}
-
-.transactions-section h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-    color: var(--text-primary);
-}
-
-.transactions-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.transaction-item {
+.activity-item {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 1rem;
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    animation: slideIn 0.3s ease;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
 }
 
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateX(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
+.activity-item:hover {
+    border-color: var(--accent);
+    transform: translateX(4px);
 }
 
-.transaction-item.success {
-    border-left: 4px solid var(--success);
+.activity-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border-radius: 8px;
 }
 
-.transaction-item.error {
-    border-left: 4px solid var(--error);
-}
-
-.transaction-item p {
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-.transaction-item strong {
+.activity-content p {
+    margin: 0.25rem 0;
     color: var(--text-primary);
 }
+
+.activity-time {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Notification */
+.notification {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--success);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 
 /* Footer */
 .footer {
@@ -402,9 +442,17 @@ body {
         font-size: 1.25rem;
     }
 
-    .connect-btn {
-        padding: 0.5rem 1rem;
-        font-size: 0.9rem;
+    .network-badge {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
+    .hero-section h2 {
+        font-size: 2rem;
+    }
+    
+    .hero-stats {
+        gap: 2rem;
     }
 }
 
