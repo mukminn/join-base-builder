@@ -1,4 +1,5 @@
-// Load configuration - Fallback jika config.js tidak loaded
+// Optimized and lightweight wallet connection
+// Load configuration
 let CONFIG = window.CONFIG || {
     contracts: {
         feeGenerator: "0x33b5b0136bD1812E644eBC089af88706C9A3815d",
@@ -18,18 +19,16 @@ let CONFIG = window.CONFIG || {
 const FEE_GENERATOR_ADDRESS = CONFIG.contracts.feeGenerator;
 const NFT_CONTRACT_ADDRESS = CONFIG.contracts.simpleNFT;
 
-// ABI untuk FeeGenerator
+// Minimal ABI
 const FEE_GENERATOR_ABI = [
     "function deposit() external payable",
     "function withdraw(uint256 amount) external",
     "function getBalance() external view returns (uint256)",
     "function getTotalFees() external view returns (uint256)",
-    "function getStats() external view returns (uint256, uint256, uint256, uint256)",
     "event Deposit(address indexed user, uint256 amount, uint256 fee)",
     "event Withdraw(address indexed user, uint256 amount, uint256 fee)"
 ];
 
-// ABI untuk SimpleNFT
 const NFT_ABI = [
     "function mintNFT(string memory tokenURI) external payable",
     "function balanceOf(address owner) external view returns (uint256)",
@@ -37,62 +36,262 @@ const NFT_ABI = [
     "event NFTMinted(address indexed to, uint256 indexed tokenId, uint256 fee)"
 ];
 
-let provider;
-let signer;
-let feeGeneratorContract;
-let nftContract;
-let userAddress;
-let walletConnectProvider = null;
+// Global state
+let provider, signer, feeGeneratorContract, nftContract, userAddress;
 let refreshInterval = null;
 let initialized = false;
+let walletConnectProvider = null;
 
-// Initialize - Wait for DOM and scripts to be ready
-(function() {
-    function init() {
-        if (initialized) {
-            console.log('Already initialized, skipping...');
+// Initialize only when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    setTimeout(init, 50);
+}
+
+function init() {
+    if (initialized) return;
+    initialized = true;
+    
+    try {
+        setupEventListeners();
+        setupWalletModal();
+        checkExistingConnection();
+    } catch (error) {
+        console.error('Init error:', error);
+    }
+}
+
+function setupEventListeners() {
+    const connectBtn = document.getElementById('connectWallet');
+    const disconnectBtn = document.getElementById('disconnectWallet');
+    const closeModal = document.getElementById('closeWalletModal');
+    const modal = document.getElementById('walletModal');
+    
+    if (connectBtn) {
+        connectBtn.onclick = () => showWalletModal();
+    }
+    
+    if (disconnectBtn) {
+        disconnectBtn.onclick = disconnectWallet;
+    }
+    
+    if (closeModal) {
+        closeModal.onclick = hideWalletModal;
+    }
+    
+    if (modal) {
+        modal.onclick = (e) => {
+            if (e.target === modal) hideWalletModal();
+        };
+    }
+    
+    // Contract buttons - lazy load
+    const depositBtn = document.getElementById('depositBtn');
+    const withdrawBtn = document.getElementById('withdrawBtn');
+    const mintBtn = document.getElementById('mintNFTBtn');
+    
+    if (depositBtn) depositBtn.onclick = deposit;
+    if (withdrawBtn) withdrawBtn.onclick = withdraw;
+    if (mintBtn) mintBtn.onclick = mintNFT;
+    
+    // Wallet events
+    if (window.ethereum) {
+        window.ethereum.on('accountsChanged', handleAccountsChanged);
+        window.ethereum.on('chainChanged', () => window.location.reload());
+    }
+}
+
+function setupWalletModal() {
+    const installedWallets = document.getElementById('installedWallets');
+    const popularWallets = document.getElementById('popularWallets');
+    
+    if (!installedWallets || !popularWallets) return;
+    
+    // Installed wallets
+    const installed = [
+        { id: 'metamask', name: 'MetaMask', icon: '🦊', installed: checkInstalled('isMetaMask') },
+        { id: 'rabby', name: 'Rabby Wallet', icon: '🐰', installed: checkInstalled('isRabby') }
+    ];
+    
+    // Popular wallets
+    const popular = [
+        { id: 'safe', name: 'Safe', icon: '🛡️', installed: false },
+        { id: 'farcaster', name: 'Farcaster', icon: '📡', installed: false }
+    ];
+    
+    installedWallets.innerHTML = installed.map(w => createWalletItem(w)).join('');
+    popularWallets.innerHTML = popular.map(w => createWalletItem(w)).join('');
+    
+    // Setup wallet clicks
+    installed.concat(popular).forEach(wallet => {
+        const el = document.getElementById(`wallet-${wallet.id}`);
+        if (el) {
+            el.onclick = () => selectWallet(wallet.id);
+        }
+    });
+    
+    // Social login
+    const googleBtn = document.getElementById('googleLogin');
+    const emailBtn = document.getElementById('emailLogin');
+    
+    if (googleBtn) googleBtn.onclick = () => connectWithEmail('google');
+    if (emailBtn) emailBtn.onclick = () => connectWithEmail('email');
+    
+    // WalletConnect QR - lazy load
+    loadWalletConnectQR();
+}
+
+function checkInstalled(prop) {
+    return typeof window.ethereum !== 'undefined' && window.ethereum[prop];
+}
+
+function createWalletItem(wallet) {
+    const installedClass = wallet.installed ? '' : 'disabled';
+    return `
+        <div id="wallet-${wallet.id}" class="wallet-item ${installedClass}">
+            <div class="wallet-icon">${wallet.icon}</div>
+            <div class="wallet-name">${wallet.name}</div>
+            ${wallet.installed ? '<span class="installed-badge">installed</span>' : ''}
+        </div>
+    `;
+}
+
+async function loadWalletConnectQR() {
+    const qrContainer = document.getElementById('walletConnectQR');
+    if (!qrContainer) return;
+    
+    try {
+        // Simple QR placeholder - in production, use WalletConnect SDK
+        qrContainer.innerHTML = `
+            <div class="qr-placeholder">
+                <div class="qr-code">📱</div>
+                <p>Scan with your wallet app</p>
+                <button class="btn-small" onclick="initWalletConnect()">Generate QR</button>
+            </div>
+        `;
+    } catch (error) {
+        console.error('QR load error:', error);
+    }
+}
+
+async function initWalletConnect() {
+    try {
+        // WalletConnect initialization would go here
+        // For now, show message
+        alert('WalletConnect QR will be generated here. In production, use @walletconnect/ethereum-provider');
+    } catch (error) {
+        console.error('WalletConnect init error:', error);
+    }
+}
+
+function showWalletModal() {
+    const modal = document.getElementById('walletModal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function hideWalletModal() {
+    const modal = document.getElementById('walletModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function selectWallet(walletId) {
+    hideWalletModal();
+    
+    if (walletId === 'metamask' || walletId === 'rabby') {
+        connectInjectedWallet();
+    } else if (walletId === 'safe') {
+        alert('Safe wallet integration coming soon!');
+    } else if (walletId === 'farcaster') {
+        alert('Farcaster integration coming soon!');
+    } else {
+        alert(`${walletId} support coming soon!`);
+    }
+}
+
+async function connectInjectedWallet() {
+    if (typeof window.ethereum === 'undefined') {
+        alert('No wallet found. Please install MetaMask or Rabby Wallet.');
+        return;
+    }
+    
+    const connectBtn = document.getElementById('connectWallet');
+    
+    try {
+        if (connectBtn) {
+            connectBtn.disabled = true;
+            connectBtn.textContent = 'Connecting...';
+        }
+        
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        
+        if (!accounts || accounts.length === 0) {
+            throw new Error('No accounts returned');
+        }
+        
+        await handleWalletConnected(accounts[0]);
+        
+    } catch (error) {
+        console.error('Connect error:', error);
+        alert(error.code === 4001 ? 'Connection rejected' : error.message || 'Connection failed');
+    } finally {
+        if (connectBtn) {
+            connectBtn.disabled = false;
+            connectBtn.textContent = 'Connect Wallet';
+        }
+    }
+}
+
+async function connectWithEmail(method) {
+    hideWalletModal();
+    alert(`${method === 'google' ? 'Google' : 'Email'} login coming soon! This will use WalletConnect email/Google auth.`);
+}
+
+async function handleWalletConnected(address) {
+    try {
+        userAddress = address;
+        
+        // Lazy load ethers only when needed
+        if (typeof ethers === 'undefined') {
+            await loadEthers();
+        }
+        
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        signer = provider.getSigner();
+        
+        await checkNetwork();
+        
+        if (FEE_GENERATOR_ADDRESS && FEE_GENERATOR_ADDRESS !== '0x...') {
+            feeGeneratorContract = new ethers.Contract(FEE_GENERATOR_ADDRESS, FEE_GENERATOR_ABI, signer);
+        }
+        
+        if (NFT_CONTRACT_ADDRESS && NFT_CONTRACT_ADDRESS !== '0x...') {
+            nftContract = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, signer);
+        }
+        
+        updateUI();
+        await loadData();
+        setupContractListeners();
+        startAutoRefresh();
+        
+    } catch (error) {
+        console.error('Handle connection error:', error);
+        throw error;
+    }
+}
+
+function loadEthers() {
+    return new Promise((resolve) => {
+        if (typeof ethers !== 'undefined') {
+            resolve();
             return;
         }
         
-        console.log('DOM loaded, initializing...');
-        try {
-            initWeb3();
-            setupEventListeners();
-            initialized = true;
-            console.log('Initialization complete');
-        } catch (error) {
-            console.error('Initialization error:', error);
-        }
-    }
-    
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        setTimeout(init, 100);
-    }
-})();
-
-async function initWeb3() {
-    console.log('Initializing Web3...');
-    
-    // Check for existing connection
-    if (typeof window.ethereum !== 'undefined') {
-        console.log('Ethereum provider found');
-        try {
-            provider = new ethers.providers.Web3Provider(window.ethereum);
-            console.log('Provider created');
-            
-            // Check if already connected
-            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-            if (accounts && accounts.length > 0) {
-                await handleWalletConnected(accounts[0]);
-            }
-        } catch (error) {
-            console.error('Error creating provider:', error);
-        }
-    } else {
-        console.warn('No Ethereum provider found');
-    }
+        const script = document.createElement('script');
+        script.src = 'https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js';
+        script.onload = resolve;
+        document.head.appendChild(script);
+    });
 }
 
 async function checkNetwork() {
@@ -101,9 +300,8 @@ async function checkNetwork() {
     try {
         const network = await provider.getNetwork();
         const baseChainId = 8453;
-        const baseSepoliaChainId = 84532;
         
-        if (network.chainId !== baseChainId && network.chainId !== baseSepoliaChainId) {
+        if (network.chainId !== baseChainId && network.chainId !== 84532) {
             try {
                 await window.ethereum.request({
                     method: 'wallet_switchEthereumChain',
@@ -111,7 +309,16 @@ async function checkNetwork() {
                 });
             } catch (switchError) {
                 if (switchError.code === 4902) {
-                    await addBaseNetwork();
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: '0x2105',
+                            chainName: 'Base',
+                            nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+                            rpcUrls: ['https://mainnet.base.org'],
+                            blockExplorerUrls: ['https://basescan.org']
+                        }]
+                    });
                 }
             }
         }
@@ -120,69 +327,112 @@ async function checkNetwork() {
     }
 }
 
-async function addBaseNetwork() {
-    try {
-        await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-                chainId: '0x2105',
-                chainName: 'Base',
-                nativeCurrency: {
-                    name: 'ETH',
-                    symbol: 'ETH',
-                    decimals: 18
-                },
-                rpcUrls: ['https://mainnet.base.org'],
-                blockExplorerUrls: ['https://basescan.org']
-            }]
-        });
-    } catch (error) {
-        console.error('Error adding network:', error);
+function updateUI() {
+    const walletAddressEl = document.getElementById('walletAddress');
+    const walletInfoEl = document.getElementById('walletInfo');
+    const connectBtn = document.getElementById('connectWallet');
+    const disconnectBtn = document.getElementById('disconnectWallet');
+    
+    if (walletAddressEl && userAddress) {
+        walletAddressEl.textContent = `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
+    }
+    
+    if (walletInfoEl) walletInfoEl.classList.remove('hidden');
+    if (disconnectBtn) disconnectBtn.style.display = 'block';
+    if (connectBtn) {
+        connectBtn.textContent = 'Connected ✓';
+        connectBtn.disabled = true;
     }
 }
 
-function setupEventListeners() {
-    console.log('Setting up event listeners...');
+async function loadData() {
+    if (!userAddress || !provider) return;
     
-    const connectBtn = document.getElementById('connectWallet');
-    const disconnectBtn = document.getElementById('disconnectWallet');
-    const depositBtn = document.getElementById('depositBtn');
-    const withdrawBtn = document.getElementById('withdrawBtn');
-    const mintBtn = document.getElementById('mintNFTBtn');
-    
-    if (connectBtn) {
-        connectBtn.onclick = async function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            await connectWallet();
-            return false;
-        };
-        console.log('✅ Connect wallet button listener added');
+    try {
+        const balance = await provider.getBalance(userAddress);
+        const balanceEl = document.getElementById('walletBalance');
+        if (balanceEl) {
+            balanceEl.textContent = ethers.utils.formatEther(balance).slice(0, 6);
+        }
+        
+        if (feeGeneratorContract) {
+            const [userBalance, totalFees] = await Promise.all([
+                feeGeneratorContract.getBalance(),
+                feeGeneratorContract.getTotalFees()
+            ]);
+            
+            const userBalanceEl = document.getElementById('userBalance');
+            const totalFeesEl = document.getElementById('totalFees');
+            
+            if (userBalanceEl) userBalanceEl.textContent = ethers.utils.formatEther(userBalance).slice(0, 6) + ' ETH';
+            if (totalFeesEl) totalFeesEl.textContent = ethers.utils.formatEther(totalFees).slice(0, 6) + ' ETH';
+        }
+        
+        if (nftContract && userAddress) {
+            try {
+                const [nftBalance, nftFees] = await Promise.all([
+                    nftContract.balanceOf(userAddress),
+                    nftContract.getTotalFees()
+                ]);
+                
+                const userNFTsEl = document.getElementById('userNFTs');
+                const nftFeesEl = document.getElementById('nftFees');
+                
+                if (userNFTsEl) userNFTsEl.textContent = nftBalance.toString();
+                if (nftFeesEl) nftFeesEl.textContent = ethers.utils.formatEther(nftFees).slice(0, 6) + ' ETH';
+            } catch (e) {
+                console.warn('NFT data error:', e);
+            }
+        }
+    } catch (error) {
+        console.error('Load data error:', error);
     }
+}
+
+function setupContractListeners() {
+    if (!feeGeneratorContract) return;
     
-    if (disconnectBtn) {
-        disconnectBtn.onclick = async function(e) {
-            e.preventDefault();
-            await disconnectWallet();
-        };
+    try {
+        feeGeneratorContract.removeAllListeners();
+        
+        feeGeneratorContract.on('Deposit', (user, amount, fee) => {
+            if (user && userAddress && user.toLowerCase() === userAddress.toLowerCase()) {
+                addTransaction('Deposit successful', amount, fee, true);
+                setTimeout(loadData, 1000);
+            }
+        });
+        
+        feeGeneratorContract.on('Withdraw', (user, amount, fee) => {
+            if (user && userAddress && user.toLowerCase() === userAddress.toLowerCase()) {
+                addTransaction('Withdraw successful', amount, fee, true);
+                setTimeout(loadData, 1000);
+            }
+        });
+        
+        if (nftContract) {
+            nftContract.removeAllListeners('NFTMinted');
+            nftContract.on('NFTMinted', (to, tokenId, fee) => {
+                if (to && userAddress && to.toLowerCase() === userAddress.toLowerCase()) {
+                    addTransaction(`NFT #${tokenId} minted`, fee, null, true);
+                    setTimeout(loadData, 1000);
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Setup listeners error:', error);
     }
+}
+
+async function checkExistingConnection() {
+    if (typeof window.ethereum === 'undefined') return;
     
-    if (depositBtn) {
-        depositBtn.addEventListener('click', deposit);
-    }
-    
-    if (withdrawBtn) {
-        withdrawBtn.addEventListener('click', withdraw);
-    }
-    
-    if (mintBtn) {
-        mintBtn.addEventListener('click', mintNFT);
-    }
-    
-    // Listen for account changes
-    if (window.ethereum) {
-        window.ethereum.on('accountsChanged', handleAccountsChanged);
-        window.ethereum.on('chainChanged', handleChainChanged);
+    try {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts && accounts.length > 0) {
+            await handleWalletConnected(accounts[0]);
+        }
+    } catch (error) {
+        console.error('Check connection error:', error);
     }
 }
 
@@ -194,277 +444,22 @@ function handleAccountsChanged(accounts) {
     }
 }
 
-function handleChainChanged(chainId) {
-    window.location.reload();
-}
-
-async function connectWallet() {
-    console.log('=== Connect wallet function called ===');
-    
-    const connectBtn = document.getElementById('connectWallet');
-    
-    try {
-        if (connectBtn) {
-            connectBtn.textContent = 'Connecting...';
-            connectBtn.disabled = true;
-            connectBtn.style.opacity = '0.6';
-        }
-        
-        // Try WalletConnect first, then fallback to injected provider
-        if (typeof window.ethereum !== 'undefined') {
-            // Use injected provider (MetaMask, etc)
-            const accounts = await window.ethereum.request({ 
-                method: 'eth_requestAccounts' 
-            });
-            
-            if (!accounts || accounts.length === 0) {
-                throw new Error('No accounts returned');
-            }
-            
-            await handleWalletConnected(accounts[0]);
-        } else {
-            throw new Error('No wallet provider found. Please install MetaMask or use WalletConnect.');
-        }
-        
-    } catch (error) {
-        console.error('❌ Error connecting wallet:', error);
-        
-        if (connectBtn) {
-            connectBtn.textContent = 'Hubungkan Dompet';
-            connectBtn.disabled = false;
-            connectBtn.style.opacity = '1';
-        }
-        
-        let errorMsg = 'Failed to connect wallet';
-        
-        if (error.code === 4001) {
-            errorMsg = 'Connection rejected. Please approve in your wallet.';
-        } else if (error.code === -32002) {
-            errorMsg = 'Connection request pending. Check your wallet.';
-        } else if (error.message) {
-            errorMsg = error.message;
-        }
-        
-        alert(errorMsg);
-    }
-}
-
-async function handleWalletConnected(address) {
-    try {
-        userAddress = address;
-        
-        // Initialize provider if not already
-        if (!provider && window.ethereum) {
-            provider = new ethers.providers.Web3Provider(window.ethereum);
-        }
-        
-        if (!provider) {
-            throw new Error('Provider not available');
-        }
-        
-        signer = provider.getSigner();
-        console.log('Connected to address:', userAddress);
-        
-        // Check and switch network
-        await checkNetwork();
-        
-        // Initialize contracts
-        if (FEE_GENERATOR_ADDRESS && FEE_GENERATOR_ADDRESS !== '0x...') {
-            feeGeneratorContract = new ethers.Contract(FEE_GENERATOR_ADDRESS, FEE_GENERATOR_ABI, signer);
-            console.log('FeeGenerator contract initialized');
-        }
-        
-        if (NFT_CONTRACT_ADDRESS && NFT_CONTRACT_ADDRESS !== '0x...') {
-            nftContract = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, signer);
-            console.log('NFT contract initialized');
-        }
-        
-        // Update UI
-        const walletAddressEl = document.getElementById('walletAddress');
-        const walletInfoEl = document.getElementById('walletInfo');
-        const connectBtn = document.getElementById('connectWallet');
-        const disconnectBtn = document.getElementById('disconnectWallet');
-        
-        if (walletAddressEl) {
-            walletAddressEl.textContent = `${userAddress.slice(0, 6)}...${userAddress.slice(-4)}`;
-        }
-        
-        if (walletInfoEl) {
-            walletInfoEl.classList.remove('hidden');
-        }
-        
-        if (disconnectBtn) {
-            disconnectBtn.style.display = 'block';
-        }
-        
-        if (connectBtn) {
-            connectBtn.textContent = 'Connected ✓';
-            connectBtn.disabled = true;
-            connectBtn.style.opacity = '1';
-        }
-        
-        // Load data
-        await loadWalletData();
-        if (feeGeneratorContract) {
-            await loadContractData();
-        }
-        
-        // Setup contract event listeners
-        if (feeGeneratorContract) {
-            setupContractListeners();
-        }
-        
-        // Start auto-refresh
-        startAutoRefresh();
-        
-        console.log('✅ Wallet connected successfully!');
-        
-    } catch (error) {
-        console.error('Error handling wallet connection:', error);
-        throw error;
-    }
-}
-
 async function disconnectWallet() {
-    try {
-        // Stop auto-refresh
-        stopAutoRefresh();
-        
-        // Clear contracts
-        feeGeneratorContract = null;
-        nftContract = null;
-        signer = null;
-        userAddress = null;
-        
-        // Update UI
-        const walletInfoEl = document.getElementById('walletInfo');
-        const connectBtn = document.getElementById('connectWallet');
-        const disconnectBtn = document.getElementById('disconnectWallet');
-        
-        if (walletInfoEl) {
-            walletInfoEl.classList.add('hidden');
-        }
-        
-        if (disconnectBtn) {
-            disconnectBtn.style.display = 'none';
-        }
-        
-        if (connectBtn) {
-            connectBtn.textContent = 'Hubungkan Dompet';
-            connectBtn.disabled = false;
-            connectBtn.style.opacity = '1';
-        }
-        
-        console.log('✅ Wallet disconnected');
-    } catch (error) {
-        console.error('Error disconnecting wallet:', error);
-    }
-}
-
-async function loadWalletData() {
-    if (!userAddress || !provider) return;
+    stopAutoRefresh();
+    feeGeneratorContract = null;
+    nftContract = null;
+    signer = null;
+    userAddress = null;
     
-    try {
-        const balance = await provider.getBalance(userAddress);
-        const balanceEl = document.getElementById('walletBalance');
-        if (balanceEl) {
-            balanceEl.textContent = ethers.utils.formatEther(balance).slice(0, 6);
-        }
-    } catch (error) {
-        console.error('Error loading wallet data:', error);
-    }
-}
-
-async function loadContractData() {
-    if (!feeGeneratorContract) return;
+    const walletInfoEl = document.getElementById('walletInfo');
+    const connectBtn = document.getElementById('connectWallet');
+    const disconnectBtn = document.getElementById('disconnectWallet');
     
-    try {
-        // Fee Generator stats
-        const userBalance = await feeGeneratorContract.getBalance();
-        const totalFees = await feeGeneratorContract.getTotalFees();
-        
-        const userBalanceEl = document.getElementById('userBalance');
-        const totalFeesEl = document.getElementById('totalFees');
-        
-        if (userBalanceEl) {
-            userBalanceEl.textContent = ethers.utils.formatEther(userBalance).slice(0, 6) + ' ETH';
-        }
-        if (totalFeesEl) {
-            totalFeesEl.textContent = ethers.utils.formatEther(totalFees).slice(0, 6) + ' ETH';
-        }
-        
-        // NFT stats (only if contract exists)
-        if (nftContract && userAddress) {
-            try {
-                const nftBalance = await nftContract.balanceOf(userAddress);
-                const nftFees = await nftContract.getTotalFees();
-                
-                const userNFTsEl = document.getElementById('userNFTs');
-                const nftFeesEl = document.getElementById('nftFees');
-                
-                if (userNFTsEl) {
-                    userNFTsEl.textContent = nftBalance.toString();
-                }
-                if (nftFeesEl) {
-                    nftFeesEl.textContent = ethers.utils.formatEther(nftFees).slice(0, 6) + ' ETH';
-                }
-            } catch (nftError) {
-                console.warn('NFT contract not available:', nftError);
-            }
-        }
-    } catch (error) {
-        console.error('Error loading contract data:', error);
-    }
-}
-
-function setupContractListeners() {
-    if (!feeGeneratorContract) return;
-    
-    try {
-        // Remove old listeners first to prevent duplicates
-        feeGeneratorContract.removeAllListeners('Deposit');
-        feeGeneratorContract.removeAllListeners('Withdraw');
-        
-        // Listen for deposit events
-        feeGeneratorContract.on('Deposit', (user, amount, fee) => {
-            try {
-                if (user && userAddress && user.toLowerCase() === userAddress.toLowerCase()) {
-                    addTransaction('Deposit successful', amount, fee, true);
-                    setTimeout(() => loadContractData(), 1000);
-                }
-            } catch (error) {
-                console.error('Deposit event error:', error);
-            }
-        });
-        
-        // Listen for withdraw events
-        feeGeneratorContract.on('Withdraw', (user, amount, fee) => {
-            try {
-                if (user && userAddress && user.toLowerCase() === userAddress.toLowerCase()) {
-                    addTransaction('Withdraw successful', amount, fee, true);
-                    setTimeout(() => loadContractData(), 1000);
-                }
-            } catch (error) {
-                console.error('Withdraw event error:', error);
-            }
-        });
-        
-        // Listen for NFT mint events (if contract exists)
-        if (nftContract) {
-            nftContract.removeAllListeners('NFTMinted');
-            nftContract.on('NFTMinted', (to, tokenId, fee) => {
-                try {
-                    if (to && userAddress && to.toLowerCase() === userAddress.toLowerCase()) {
-                        addTransaction(`NFT #${tokenId} minted`, fee, null, true);
-                        setTimeout(() => loadContractData(), 1000);
-                    }
-                } catch (error) {
-                    console.error('NFT mint event error:', error);
-                }
-            });
-        }
-    } catch (error) {
-        console.error('Error setting up contract listeners:', error);
+    if (walletInfoEl) walletInfoEl.classList.add('hidden');
+    if (disconnectBtn) disconnectBtn.style.display = 'none';
+    if (connectBtn) {
+        connectBtn.textContent = 'Connect Wallet';
+        connectBtn.disabled = false;
     }
 }
 
@@ -474,50 +469,45 @@ async function deposit() {
         return;
     }
     
-    const amount = document.getElementById('depositAmount');
-    if (!amount || !amount.value) {
+    const amountEl = document.getElementById('depositAmount');
+    if (!amountEl || !amountEl.value) {
         alert('Please enter an amount');
         return;
     }
     
-    const amountValue = amount.value;
+    const amount = amountEl.value;
     const minDeposit = CONFIG?.fees?.minDeposit || "0.001";
     
-    if (parseFloat(amountValue) < parseFloat(minDeposit)) {
+    if (parseFloat(amount) < parseFloat(minDeposit)) {
         alert(`Minimum deposit is ${minDeposit} ETH`);
         return;
     }
     
-    const depositBtn = document.getElementById('depositBtn');
+    const btn = document.getElementById('depositBtn');
     
     try {
-        if (depositBtn) {
-            depositBtn.disabled = true;
-            depositBtn.textContent = 'Processing...';
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
         }
         
         const tx = await feeGeneratorContract.deposit({
-            value: ethers.utils.parseEther(amountValue)
+            value: ethers.utils.parseEther(amount)
         });
         
-        addTransaction('Deposit pending...', amountValue, null, false);
-        
+        addTransaction('Deposit pending...', amount, null, false);
         await tx.wait();
-        addTransaction('Deposit confirmed!', amountValue, null, true);
+        addTransaction('Deposit confirmed!', amount, null, true);
         
-        if (amount) {
-            amount.value = '';
-        }
-        
-        await loadContractData();
-        await loadWalletData();
+        amountEl.value = '';
+        await loadData();
     } catch (error) {
         console.error('Deposit error:', error);
         addTransaction('Deposit failed: ' + (error.message || 'Unknown error'), null, null, false);
     } finally {
-        if (depositBtn) {
-            depositBtn.disabled = false;
-            depositBtn.textContent = 'Deposit';
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Deposit';
         }
     }
 }
@@ -528,47 +518,35 @@ async function withdraw() {
         return;
     }
     
-    const amount = document.getElementById('withdrawAmount');
-    if (!amount || !amount.value) {
+    const amountEl = document.getElementById('withdrawAmount');
+    if (!amountEl || !amountEl.value) {
         alert('Please enter an amount');
         return;
     }
     
-    const amountValue = amount.value;
-    
-    if (parseFloat(amountValue) <= 0) {
-        alert('Please enter a valid amount');
-        return;
-    }
-    
-    const withdrawBtn = document.getElementById('withdrawBtn');
+    const amount = amountEl.value;
+    const btn = document.getElementById('withdrawBtn');
     
     try {
-        if (withdrawBtn) {
-            withdrawBtn.disabled = true;
-            withdrawBtn.textContent = 'Processing...';
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
         }
         
-        const tx = await feeGeneratorContract.withdraw(ethers.utils.parseEther(amountValue));
-        
-        addTransaction('Withdraw pending...', amountValue, null, false);
-        
+        const tx = await feeGeneratorContract.withdraw(ethers.utils.parseEther(amount));
+        addTransaction('Withdraw pending...', amount, null, false);
         await tx.wait();
-        addTransaction('Withdraw confirmed!', amountValue, null, true);
+        addTransaction('Withdraw confirmed!', amount, null, true);
         
-        if (amount) {
-            amount.value = '';
-        }
-        
-        await loadContractData();
-        await loadWalletData();
+        amountEl.value = '';
+        await loadData();
     } catch (error) {
         console.error('Withdraw error:', error);
         addTransaction('Withdraw failed: ' + (error.message || 'Unknown error'), null, null, false);
     } finally {
-        if (withdrawBtn) {
-            withdrawBtn.disabled = false;
-            withdrawBtn.textContent = 'Withdraw';
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Withdraw';
         }
     }
 }
@@ -579,39 +557,31 @@ async function mintNFT() {
         return;
     }
     
-    const tokenURI = document.getElementById('nftURI');
-    const tokenURIValue = tokenURI ? tokenURI.value : "https://example.com/metadata.json";
-    const mintPriceStr = CONFIG?.fees?.nftMintPrice || "0.001";
-    const mintPrice = ethers.utils.parseEther(mintPriceStr);
-    
-    const mintBtn = document.getElementById('mintNFTBtn');
+    const tokenURIEl = document.getElementById('nftURI');
+    const tokenURI = tokenURIEl ? tokenURIEl.value : "https://example.com/metadata.json";
+    const mintPrice = ethers.utils.parseEther(CONFIG?.fees?.nftMintPrice || "0.001");
+    const btn = document.getElementById('mintNFTBtn');
     
     try {
-        if (mintBtn) {
-            mintBtn.disabled = true;
-            mintBtn.textContent = 'Minting...';
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Minting...';
         }
         
-        const tx = await nftContract.mintNFT(tokenURIValue, { value: mintPrice });
-        
-        addTransaction(`Minting NFT...`, mintPriceStr, null, false);
-        
+        const tx = await nftContract.mintNFT(tokenURI, { value: mintPrice });
+        addTransaction('Minting NFT...', CONFIG?.fees?.nftMintPrice || "0.001", null, false);
         await tx.wait();
-        addTransaction('NFT minted successfully!', mintPriceStr, null, true);
+        addTransaction('NFT minted successfully!', CONFIG?.fees?.nftMintPrice || "0.001", null, true);
         
-        if (tokenURI) {
-            tokenURI.value = '';
-        }
-        
-        await loadContractData();
-        await loadWalletData();
+        if (tokenURIEl) tokenURIEl.value = '';
+        await loadData();
     } catch (error) {
         console.error('Mint error:', error);
         addTransaction('Mint failed: ' + (error.message || 'Unknown error'), null, null, false);
     } finally {
-        if (mintBtn) {
-            mintBtn.disabled = false;
-            mintBtn.textContent = 'Mint NFT';
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Mint NFT';
         }
     }
 }
@@ -620,40 +590,29 @@ function addTransaction(message, amount, fee, success) {
     const transactionsDiv = document.getElementById('transactions');
     if (!transactionsDiv) return;
     
-    const transactionDiv = document.createElement('div');
-    transactionDiv.className = `transaction-item ${success ? 'success' : ''}`;
+    const div = document.createElement('div');
+    div.className = `transaction-item ${success ? 'success' : ''}`;
     
     let html = `<p><strong>${message}</strong></p>`;
-    if (amount) {
-        html += `<p>Amount: ${amount} ETH</p>`;
-    }
-    if (fee) {
-        html += `<p>Fee: ${ethers.utils.formatEther(fee).slice(0, 6)} ETH</p>`;
-    }
+    if (amount) html += `<p>Amount: ${amount} ETH</p>`;
+    if (fee) html += `<p>Fee: ${ethers.utils.formatEther(fee).slice(0, 6)} ETH</p>`;
     html += `<p class="transaction-time">${new Date().toLocaleTimeString()}</p>`;
     
-    transactionDiv.innerHTML = html;
-    transactionsDiv.insertBefore(transactionDiv, transactionsDiv.firstChild);
+    div.innerHTML = html;
+    transactionsDiv.insertBefore(div, transactionsDiv.firstChild);
     
-    // Keep only last 10 transactions
+    // Keep only last 10
     while (transactionsDiv.children.length > 10) {
         transactionsDiv.removeChild(transactionsDiv.lastChild);
     }
 }
 
 function startAutoRefresh() {
-    if (refreshInterval) {
-        clearInterval(refreshInterval);
-    }
+    if (refreshInterval) clearInterval(refreshInterval);
     
     refreshInterval = setInterval(() => {
         if (userAddress && provider) {
-            try {
-                loadContractData();
-                loadWalletData();
-            } catch (error) {
-                console.error('Auto-refresh error:', error);
-            }
+            loadData().catch(err => console.error('Refresh error:', err));
         }
     }, 30000);
 }
@@ -664,3 +623,6 @@ function stopAutoRefresh() {
         refreshInterval = null;
     }
 }
+
+// Expose for QR button
+window.initWalletConnect = initWalletConnect;

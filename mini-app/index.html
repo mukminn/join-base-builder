@@ -5,15 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Base Builders December - Mini App</title>
     <meta name="description" content="Mini App untuk Base Builders December - Interact dengan smart contracts untuk generate fees">
-    <meta name="keywords" content="base, ethereum, defi, nft, mini app">
-    <meta property="og:title" content="Base Builders December - Mini App">
-    <meta property="og:description" content="Mini App untuk Base Builders December program">
-    <meta property="og:type" content="website">
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
-    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
-    <!-- WalletConnect v3 (Reown) -->
-    <script type="module" src="https://unpkg.com/@walletconnect/ethereum-provider@2.15.0/dist/index.umd.js"></script>
+    <!-- Ethers.js - Load only when needed -->
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js" defer></script>
 </head>
 <body>
     <div class="container">
@@ -23,7 +18,7 @@
         </header>
 
         <div class="wallet-section">
-            <button id="connectWallet" class="btn btn-primary">Hubungkan Dompet</button>
+            <button id="connectWallet" class="btn btn-primary">Connect Wallet</button>
             <div id="walletInfo" class="wallet-info hidden">
                 <p>Connected: <span id="walletAddress"></span></p>
                 <p>Balance: <span id="walletBalance">0</span> ETH</p>
@@ -90,8 +85,63 @@
         </footer>
     </div>
     
-    <!-- Load scripts at the end, after DOM is ready -->
+    <!-- WalletConnect Modal -->
+    <div id="walletModal" class="wallet-modal hidden">
+        <div class="wallet-modal-content">
+            <div class="wallet-modal-header">
+                <h2>Connect Wallet</h2>
+                <button class="wallet-modal-close" id="closeWalletModal">&times;</button>
+            </div>
+            <div class="wallet-modal-body">
+                <!-- WalletConnect QR Code -->
+                <div class="wallet-option-section">
+                    <div class="wallet-option-header">
+                        <h3>WalletConnect</h3>
+                        <div id="walletConnectQR" class="qr-code-container">
+                            <div class="qr-loading">Loading QR Code...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Installed Wallets -->
+                <div class="wallet-option-section">
+                    <h3>Installed</h3>
+                    <div class="wallet-list" id="installedWallets">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Popular Wallets -->
+                <div class="wallet-option-section">
+                    <h3>Popular</h3>
+                    <div class="wallet-list" id="popularWallets">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Email/Google Login -->
+                <div class="wallet-option-section">
+                    <h3>or</h3>
+                    <div class="social-login">
+                        <button class="btn-social btn-google" id="googleLogin">
+                            <span>🔵</span> Continue with Google
+                        </button>
+                        <button class="btn-social btn-email" id="emailLogin">
+                            <span>✉️</span> Continue with Email
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="wallet-modal-footer">
+                    <p>UX by <a href="https://reown.com" target="_blank">Reown</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Load scripts at the end -->
     <script src="config.js"></script>
-    <script src="app.js"></script>
+    <script src="app.js" defer></script>
 </body>
 </html>
