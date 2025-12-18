@@ -42,10 +42,50 @@
         </header>
 
         <div class="wallet-section">
-            <button id="connectWallet" class="btn btn-primary">Connect Wallet</button>
+            <button id="connectWallet" class="btn btn-primary">Hubungkan Dompet</button>
             <div id="walletInfo" class="wallet-info hidden">
                 <p>Connected: <span id="walletAddress"></span></p>
                 <p>Balance: <span id="walletBalance">0</span> ETH</p>
+            </div>
+        </div>
+
+        <!-- Wallet Selection Modal -->
+        <div id="walletModal" class="wallet-modal hidden">
+            <div class="wallet-modal-content">
+                <div class="wallet-modal-header">
+                    <h2>Hubungkan Dompet</h2>
+                    <button class="wallet-modal-close" id="closeWalletModal">&times;</button>
+                </div>
+                <div class="wallet-modal-body">
+                    <div class="wallet-modal-left">
+                        <h3>Terinstal</h3>
+                        <div class="wallet-list" id="installedWallets">
+                            <!-- Will be populated by JS -->
+                        </div>
+                        
+                        <h3>Populer</h3>
+                        <div class="wallet-list" id="popularWallets">
+                            <!-- Will be populated by JS -->
+                        </div>
+                    </div>
+                    <div class="wallet-modal-right">
+                        <h3>Apa itu Dompet?</h3>
+                        <div class="wallet-info-card">
+                            <div class="info-item">
+                                <div class="info-icon">🏠</div>
+                                <h4>Sebuah Rumah untuk Aset Digital Anda</h4>
+                                <p>Dompet digunakan untuk mengirim, menerima, menyimpan, dan menampilkan aset digital seperti Ethereum dan NFTs.</p>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon">🔐</div>
+                                <h4>Cara Baru untuk Masuk</h4>
+                                <p>Alih-alih membuat akun dan kata sandi baru di setiap situs web, cukup hubungkan dompet Anda.</p>
+                            </div>
+                        </div>
+                        <button class="btn-get-wallet" onclick="window.open('https://metamask.io/download/', '_blank')">Dapatkan Dompet</button>
+                        <a href="https://ethereum.org/en/wallets/" target="_blank" class="learn-more">Pelajari lebih lanjut</a>
+                    </div>
+                </div>
             </div>
         </div>
 

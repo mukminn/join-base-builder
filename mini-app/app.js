@@ -134,47 +134,37 @@ function setupEventListeners() {
     console.log('Setting up event listeners...');
     
     const connectBtn = document.getElementById('connectWallet');
+    const walletModal = document.getElementById('walletModal');
+    const closeModal = document.getElementById('closeWalletModal');
     const depositBtn = document.getElementById('depositBtn');
     const withdrawBtn = document.getElementById('withdrawBtn');
     const mintBtn = document.getElementById('mintNFTBtn');
     
     if (connectBtn) {
-        // Remove all existing listeners by cloning
-        const newBtn = connectBtn.cloneNode(true);
-        connectBtn.parentNode.replaceChild(newBtn, connectBtn);
-        
-        // Multiple ways to ensure click works
-        newBtn.addEventListener('click', function(e) {
+        connectBtn.onclick = function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('✅ Button clicked via addEventListener');
-            if (typeof connectWallet === 'function') {
-                connectWallet();
-            } else {
-                console.error('connectWallet is not a function');
-            }
-        }, { once: false, capture: false });
-        
-        // Direct onclick as primary method
-        newBtn.onclick = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('✅ Button clicked via onclick');
-            if (typeof connectWallet === 'function') {
-                connectWallet();
-            } else {
-                console.error('connectWallet is not a function');
-            }
+            showWalletModal();
             return false;
         };
-        
-        // Also expose globally
-        window.connectWalletBtn = newBtn;
-        
         console.log('✅ Connect wallet button listener added');
     } else {
         console.error('❌ Connect wallet button not found!');
         setTimeout(setupEventListeners, 500);
+    }
+    
+    if (closeModal) {
+        closeModal.onclick = function() {
+            hideWalletModal();
+        };
+    }
+    
+    if (walletModal) {
+        walletModal.onclick = function(e) {
+            if (e.target === walletModal) {
+                hideWalletModal();
+            }
+        };
     }
     
     if (depositBtn) {
@@ -188,6 +178,119 @@ function setupEventListeners() {
     if (mintBtn) {
         mintBtn.addEventListener('click', mintNFT);
     }
+    
+    // Setup wallet options
+    setupWalletOptions();
+}
+
+function showWalletModal() {
+    const modal = document.getElementById('walletModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+}
+
+function hideWalletModal() {
+    const modal = document.getElementById('walletModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+function setupWalletOptions() {
+    const installedWallets = document.getElementById('installedWallets');
+    const popularWallets = document.getElementById('popularWallets');
+    
+    if (!installedWallets || !popularWallets) return;
+    
+    // Check which wallets are installed
+    const wallets = [
+        {
+            id: 'metamask',
+            name: 'MetaMask',
+            desc: 'Connect using MetaMask browser extension',
+            icon: '🦊',
+            installed: typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask,
+            connect: connectMetaMask
+        },
+        {
+            id: 'rabby',
+            name: 'Rabby Wallet',
+            desc: 'Connect using Rabby Wallet',
+            icon: '🐰',
+            installed: typeof window.ethereum !== 'undefined' && window.ethereum.isRabby,
+            connect: connectMetaMask // Rabby uses same interface
+        }
+    ];
+    
+    const popular = [
+        {
+            id: 'rainbow',
+            name: 'Rainbow',
+            desc: 'Connect using Rainbow Wallet',
+            icon: '🌈',
+            installed: false,
+            connect: () => alert('Rainbow Wallet support coming soon!')
+        },
+        {
+            id: 'coinbase',
+            name: 'Coinbase Wallet',
+            desc: 'Connect using Coinbase Wallet',
+            icon: '🔵',
+            installed: typeof window.ethereum !== 'undefined' && window.ethereum.isCoinbaseWallet,
+            connect: connectMetaMask
+        },
+        {
+            id: 'walletconnect',
+            name: 'WalletConnect',
+            desc: 'Connect using WalletConnect',
+            icon: '🔗',
+            installed: false,
+            connect: () => alert('WalletConnect support coming soon!')
+        }
+    ];
+    
+    // Render installed wallets
+    installedWallets.innerHTML = wallets.map(wallet => `
+        <div class="wallet-item ${!wallet.installed ? 'disabled' : ''}" onclick="${wallet.installed ? `selectWallet('${wallet.id}')` : ''}">
+            <div class="wallet-icon ${wallet.id}">${wallet.icon}</div>
+            <div class="wallet-info">
+                <div class="wallet-name">${wallet.name}</div>
+                <div class="wallet-desc">${wallet.desc}</div>
+            </div>
+        </div>
+    `).join('');
+    
+    // Render popular wallets
+    popularWallets.innerHTML = popular.map(wallet => `
+        <div class="wallet-item ${!wallet.installed ? 'disabled' : ''}" onclick="${wallet.installed ? `selectWallet('${wallet.id}')` : 'installWallet()'}">
+            <div class="wallet-icon ${wallet.id}">${wallet.icon}</div>
+            <div class="wallet-info">
+                <div class="wallet-name">${wallet.name}</div>
+                <div class="wallet-desc">${wallet.desc}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function selectWallet(walletId) {
+    console.log('Selected wallet:', walletId);
+    hideWalletModal();
+    
+    if (walletId === 'metamask' || walletId === 'rabby' || walletId === 'coinbase') {
+        connectMetaMask();
+    } else {
+        alert(`${walletId} support coming soon!`);
+    }
+}
+
+function installWallet() {
+    window.open('https://metamask.io/download/', '_blank');
+}
+
+function connectMetaMask() {
+    // Use existing connectWallet function
+    connectWallet();
 }
 
 async function connectWallet() {
