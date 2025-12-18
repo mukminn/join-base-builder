@@ -43,18 +43,28 @@ let feeGeneratorContract;
 let nftContract;
 let userAddress;
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, initializing...');
-    try {
-        initWeb3();
-        setupEventListeners();
-        console.log('Initialization complete');
-    } catch (error) {
-        console.error('Initialization error:', error);
-        alert('Error initializing app: ' + error.message);
+// Initialize - Wait for DOM and scripts to be ready
+(function() {
+    function init() {
+        console.log('DOM loaded, initializing...');
+        try {
+            initWeb3();
+            setupEventListeners();
+            console.log('Initialization complete');
+        } catch (error) {
+            console.error('Initialization error:', error);
+            alert('Error initializing app: ' + error.message);
+        }
     }
-});
+    
+    // If DOM already loaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        // DOM already loaded
+        setTimeout(init, 100);
+    }
+})();
 
 async function initWeb3() {
     console.log('Initializing Web3...');
@@ -120,16 +130,37 @@ async function addBaseNetwork() {
 function setupEventListeners() {
     console.log('Setting up event listeners...');
     
+    // Remove old listeners first
     const connectBtn = document.getElementById('connectWallet');
     const depositBtn = document.getElementById('depositBtn');
     const withdrawBtn = document.getElementById('withdrawBtn');
     const mintBtn = document.getElementById('mintNFTBtn');
     
     if (connectBtn) {
-        connectBtn.addEventListener('click', connectWallet);
+        // Clone and replace to remove old listeners
+        const newBtn = connectBtn.cloneNode(true);
+        connectBtn.parentNode.replaceChild(newBtn, connectBtn);
+        
+        // Add new listener
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Button clicked!');
+            connectWallet();
+        });
+        
+        // Also add onclick as fallback
+        newBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            connectWallet();
+        };
+        
         console.log('Connect wallet button listener added');
     } else {
         console.error('Connect wallet button not found!');
+        // Retry after a short delay
+        setTimeout(setupEventListeners, 500);
     }
     
     if (depositBtn) {
@@ -146,36 +177,59 @@ function setupEventListeners() {
 }
 
 async function connectWallet() {
-    console.log('Connect wallet clicked');
+    console.log('=== Connect wallet function called ===');
     
+    // Check if MetaMask is installed
     if (typeof window.ethereum === 'undefined') {
-        alert('Please install MetaMask or another Web3 wallet!');
-        window.open('https://metamask.io/download/', '_blank');
+        const install = confirm('MetaMask tidak terdeteksi!\n\nKlik OK untuk install MetaMask.');
+        if (install) {
+            window.open('https://metamask.io/download/', '_blank');
+        }
         return;
     }
     
+    const connectBtn = document.getElementById('connectWallet');
+    
     try {
-        console.log('Requesting accounts...');
-        const connectBtn = document.getElementById('connectWallet');
+        console.log('Requesting accounts from MetaMask...');
+        
         if (connectBtn) {
             connectBtn.textContent = 'Connecting...';
             connectBtn.disabled = true;
+            connectBtn.style.opacity = '0.6';
         }
         
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        // Request account access
+        const accounts = await window.ethereum.request({ 
+            method: 'eth_requestAccounts' 
+        });
         
+        console.log('Accounts received:', accounts);
+        
+        if (!accounts || accounts.length === 0) {
+            throw new Error('No accounts returned');
+        }
+        
+        // Initialize provider
         if (!provider) {
             provider = new ethers.providers.Web3Provider(window.ethereum);
+            console.log('Provider created');
         }
         
+        // Get signer
         signer = provider.getSigner();
         userAddress = await signer.getAddress();
-        console.log('Connected to:', userAddress);
+        console.log('Connected to address:', userAddress);
+        
+        // Check and switch network
+        await checkNetwork();
         
         // Initialize contracts
         if (FEE_GENERATOR_ADDRESS && FEE_GENERATOR_ADDRESS !== '0x...') {
             feeGeneratorContract = new ethers.Contract(FEE_GENERATOR_ADDRESS, FEE_GENERATOR_ABI, signer);
-            console.log('FeeGenerator contract initialized');
+            console.log('FeeGenerator contract initialized at:', FEE_GENERATOR_ADDRESS);
+        } else {
+            console.warn('FeeGenerator address not set');
         }
         
         if (NFT_CONTRACT_ADDRESS && NFT_CONTRACT_ADDRESS !== '0x...') {
@@ -196,31 +250,44 @@ async function connectWallet() {
         }
         
         if (connectBtn) {
-            connectBtn.textContent = 'Connected';
+            connectBtn.textContent = 'Connected ✓';
             connectBtn.disabled = true;
+            connectBtn.style.opacity = '1';
         }
         
         // Load data
         await loadWalletData();
-        await loadContractData();
+        if (feeGeneratorContract) {
+            await loadContractData();
+        }
         
-        // Setup listeners
-        setupContractListeners();
+        // Setup contract event listeners
+        if (feeGeneratorContract) {
+            setupContractListeners();
+        }
         
-        console.log('Wallet connected successfully');
+        console.log('✅ Wallet connected successfully!');
+        
     } catch (error) {
-        console.error('Error connecting wallet:', error);
-        const connectBtn = document.getElementById('connectWallet');
+        console.error('❌ Error connecting wallet:', error);
+        
         if (connectBtn) {
             connectBtn.textContent = 'Connect Wallet';
             connectBtn.disabled = false;
+            connectBtn.style.opacity = '1';
         }
         
+        let errorMsg = 'Failed to connect wallet';
+        
         if (error.code === 4001) {
-            alert('Please approve the connection request in your wallet.');
-        } else {
-            alert('Failed to connect wallet: ' + error.message);
+            errorMsg = 'Connection rejected. Please approve in MetaMask.';
+        } else if (error.code === -32002) {
+            errorMsg = 'Connection request pending. Check MetaMask.';
+        } else if (error.message) {
+            errorMsg = error.message;
         }
+        
+        alert(errorMsg);
     }
 }
 

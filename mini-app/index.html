@@ -15,9 +15,6 @@
     <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
 </head>
 <body>
-    <!-- Load config first, then app -->
-    <script src="config.js"></script>
-    <script src="app.js"></script>
     <div class="container">
         <header>
             <h1>🚀 Base Builders December</h1>
@@ -90,5 +87,9 @@
             </p>
         </footer>
     </div>
+    
+    <!-- Load scripts at the end, after DOM is ready -->
+    <script src="config.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
