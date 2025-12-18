@@ -446,54 +446,96 @@ async function loadWalletData() {
 }
 
 async function loadContractData() {
-    if (!feeGeneratorContract || !nftContract) return;
+    if (!feeGeneratorContract) return;
     
     try {
         // Fee Generator stats
         const userBalance = await feeGeneratorContract.getBalance();
         const totalFees = await feeGeneratorContract.getTotalFees();
         
-        document.getElementById('userBalance').textContent = 
-            ethers.utils.formatEther(userBalance).slice(0, 6) + ' ETH';
-        document.getElementById('totalFees').textContent = 
-            ethers.utils.formatEther(totalFees).slice(0, 6) + ' ETH';
+        const userBalanceEl = document.getElementById('userBalance');
+        const totalFeesEl = document.getElementById('totalFees');
         
-        // NFT stats
-        const nftBalance = await nftContract.balanceOf(userAddress);
-        const nftFees = await nftContract.getTotalFees();
+        if (userBalanceEl) {
+            userBalanceEl.textContent = ethers.utils.formatEther(userBalance).slice(0, 6) + ' ETH';
+        }
+        if (totalFeesEl) {
+            totalFeesEl.textContent = ethers.utils.formatEther(totalFees).slice(0, 6) + ' ETH';
+        }
         
-        document.getElementById('userNFTs').textContent = nftBalance.toString();
-        document.getElementById('nftFees').textContent = 
-            ethers.utils.formatEther(nftFees).slice(0, 6) + ' ETH';
+        // NFT stats (only if contract exists)
+        if (nftContract && userAddress) {
+            try {
+                const nftBalance = await nftContract.balanceOf(userAddress);
+                const nftFees = await nftContract.getTotalFees();
+                
+                const userNFTsEl = document.getElementById('userNFTs');
+                const nftFeesEl = document.getElementById('nftFees');
+                
+                if (userNFTsEl) {
+                    userNFTsEl.textContent = nftBalance.toString();
+                }
+                if (nftFeesEl) {
+                    nftFeesEl.textContent = ethers.utils.formatEther(nftFees).slice(0, 6) + ' ETH';
+                }
+            } catch (nftError) {
+                console.warn('NFT contract not available:', nftError);
+            }
+        }
     } catch (error) {
         console.error('Error loading contract data:', error);
     }
 }
 
 function setupContractListeners() {
-    // Listen for deposit events
-    feeGeneratorContract.on('Deposit', (user, amount, fee) => {
-        if (user.toLowerCase() === userAddress.toLowerCase()) {
-            addTransaction('Deposit successful', amount, fee, true);
-            loadContractData();
-        }
-    });
+    if (!feeGeneratorContract) return;
     
-    // Listen for withdraw events
-    feeGeneratorContract.on('Withdraw', (user, amount, fee) => {
-        if (user.toLowerCase() === userAddress.toLowerCase()) {
-            addTransaction('Withdraw successful', amount, fee, true);
-            loadContractData();
+    try {
+        // Remove old listeners first to prevent duplicates
+        feeGeneratorContract.removeAllListeners('Deposit');
+        feeGeneratorContract.removeAllListeners('Withdraw');
+        
+        // Listen for deposit events
+        feeGeneratorContract.on('Deposit', (user, amount, fee) => {
+            try {
+                if (user && userAddress && user.toLowerCase() === userAddress.toLowerCase()) {
+                    addTransaction('Deposit successful', amount, fee, true);
+                    setTimeout(() => loadContractData(), 1000);
+                }
+            } catch (error) {
+                console.error('Deposit event error:', error);
+            }
+        });
+        
+        // Listen for withdraw events
+        feeGeneratorContract.on('Withdraw', (user, amount, fee) => {
+            try {
+                if (user && userAddress && user.toLowerCase() === userAddress.toLowerCase()) {
+                    addTransaction('Withdraw successful', amount, fee, true);
+                    setTimeout(() => loadContractData(), 1000);
+                }
+            } catch (error) {
+                console.error('Withdraw event error:', error);
+            }
+        });
+        
+        // Listen for NFT mint events (if contract exists)
+        if (nftContract) {
+            nftContract.removeAllListeners('NFTMinted');
+            nftContract.on('NFTMinted', (to, tokenId, fee) => {
+                try {
+                    if (to && userAddress && to.toLowerCase() === userAddress.toLowerCase()) {
+                        addTransaction(`NFT #${tokenId} minted`, fee, null, true);
+                        setTimeout(() => loadContractData(), 1000);
+                    }
+                } catch (error) {
+                    console.error('NFT mint event error:', error);
+                }
+            });
         }
-    });
-    
-    // Listen for NFT mint events
-    nftContract.on('NFTMinted', (to, tokenId, fee) => {
-        if (to.toLowerCase() === userAddress.toLowerCase()) {
-            addTransaction(`NFT #${tokenId} minted`, fee, null, true);
-            loadContractData();
-        }
-    });
+    } catch (error) {
+        console.error('Error setting up contract listeners:', error);
+    }
 }
 
 async function deposit() {
