@@ -201,7 +201,11 @@ function setupWalletOptions() {
     const installedWallets = document.getElementById('installedWallets');
     const popularWallets = document.getElementById('popularWallets');
     
-    if (!installedWallets || !popularWallets) return;
+    if (!installedWallets || !popularWallets) {
+        console.warn('Wallet modal elements not found, retrying...');
+        setTimeout(setupWalletOptions, 500);
+        return;
+    }
     
     // Check which wallets are installed
     const wallets = [
@@ -251,26 +255,40 @@ function setupWalletOptions() {
     ];
     
     // Render installed wallets
-    installedWallets.innerHTML = wallets.map(wallet => `
-        <div class="wallet-item ${!wallet.installed ? 'disabled' : ''}" onclick="${wallet.installed ? `selectWallet('${wallet.id}')` : ''}">
-            <div class="wallet-icon ${wallet.id}">${wallet.icon}</div>
-            <div class="wallet-info">
-                <div class="wallet-name">${wallet.name}</div>
-                <div class="wallet-desc">${wallet.desc}</div>
-            </div>
-        </div>
-    `).join('');
+    try {
+        installedWallets.innerHTML = wallets.map(wallet => {
+            const onClick = wallet.installed ? `window.selectWallet('${wallet.id}')` : '';
+            return `
+                <div class="wallet-item ${!wallet.installed ? 'disabled' : ''}" ${onClick ? `onclick="${onClick}"` : ''}>
+                    <div class="wallet-icon ${wallet.id}">${wallet.icon}</div>
+                    <div class="wallet-info">
+                        <div class="wallet-name">${wallet.name}</div>
+                        <div class="wallet-desc">${wallet.desc}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error rendering installed wallets:', error);
+    }
     
     // Render popular wallets
-    popularWallets.innerHTML = popular.map(wallet => `
-        <div class="wallet-item ${!wallet.installed ? 'disabled' : ''}" onclick="${wallet.installed ? `selectWallet('${wallet.id}')` : 'installWallet()'}">
-            <div class="wallet-icon ${wallet.id}">${wallet.icon}</div>
-            <div class="wallet-info">
-                <div class="wallet-name">${wallet.name}</div>
-                <div class="wallet-desc">${wallet.desc}</div>
-            </div>
-        </div>
-    `).join('');
+    try {
+        popularWallets.innerHTML = popular.map(wallet => {
+            const onClick = wallet.installed ? `window.selectWallet('${wallet.id}')` : 'window.installWallet()';
+            return `
+                <div class="wallet-item ${!wallet.installed ? 'disabled' : ''}" onclick="${onClick}">
+                    <div class="wallet-icon ${wallet.id}">${wallet.icon}</div>
+                    <div class="wallet-info">
+                        <div class="wallet-name">${wallet.name}</div>
+                        <div class="wallet-desc">${wallet.desc}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (error) {
+        console.error('Error rendering popular wallets:', error);
+    }
 }
 
 function selectWallet(walletId) {
@@ -390,6 +408,9 @@ async function connectWallet() {
         if (feeGeneratorContract) {
             setupContractListeners();
         }
+        
+        // Start auto-refresh
+        startAutoRefresh();
         
         console.log('✅ Wallet connected successfully!');
         
@@ -595,10 +616,29 @@ function addTransaction(message, amount, fee, success) {
     }
 }
 
-// Auto-refresh data every 30 seconds
-setInterval(() => {
-    if (userAddress) {
-        loadContractData();
-        loadWalletData();
+// Auto-refresh data every 30 seconds (only if connected)
+let refreshInterval = null;
+
+function startAutoRefresh() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
     }
-}, 30000);
+    
+    refreshInterval = setInterval(() => {
+        if (userAddress && provider) {
+            try {
+                loadContractData();
+                loadWalletData();
+            } catch (error) {
+                console.error('Auto-refresh error:', error);
+            }
+        }
+    }, 30000);
+}
+
+function stopAutoRefresh() {
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+}

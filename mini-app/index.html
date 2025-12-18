@@ -17,23 +17,36 @@
 <body>
     <!-- Inline script untuk immediate button setup -->
     <script>
-        // Immediate setup untuk connect button
-        window.addEventListener('load', function() {
-            const btn = document.getElementById('connectWallet');
-            if (btn) {
-                btn.onclick = function() {
-                    if (window.connectWallet) {
-                        window.connectWallet();
-                    } else {
-                        console.error('connectWallet function not loaded yet');
-                        setTimeout(function() {
-                            if (window.connectWallet) window.connectWallet();
-                        }, 500);
-                    }
-                };
-                console.log('Connect button ready');
+        // Immediate setup untuk connect button - non-blocking
+        (function() {
+            function setupButton() {
+                const btn = document.getElementById('connectWallet');
+                if (btn && !btn.dataset.setup) {
+                    btn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showWalletModal();
+                        return false;
+                    };
+                    btn.dataset.setup = 'true';
+                    console.log('Connect button ready');
+                }
             }
-        });
+            
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupButton);
+            } else {
+                setTimeout(setupButton, 50);
+            }
+        })();
+        
+        // Expose showWalletModal globally
+        window.showWalletModal = function() {
+            const modal = document.getElementById('walletModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        };
     </script>
     <div class="container">
         <header>
