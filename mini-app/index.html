@@ -3,145 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Base Builders December - Mini App</title>
-    <meta name="description" content="Mini App untuk Base Builders December - Interact dengan smart contracts untuk generate fees">
+    <title>Base Builders - DeFi Mini App</title>
+    <meta name="description" content="Base Builders December - DeFi Mini App for Base Ecosystem">
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
-    <!-- Ethers.js - Load only when needed -->
-    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js" defer></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🚀 Base Builders December</h1>
-            <p class="subtitle">Mini App untuk Base Ecosystem</p>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">⚡ Base Builders</h1>
+                <button id="connectBtn" class="connect-btn">
+                    <span class="btn-text">Connect Wallet</span>
+                </button>
+            </div>
         </header>
 
-        <div class="wallet-section">
-            <button id="connectWallet" class="btn btn-primary">Connect Wallet</button>
-            <div id="walletInfo" class="wallet-info hidden">
-                <p>Connected: <span id="walletAddress"></span></p>
-                <p>Balance: <span id="walletBalance">0</span> ETH</p>
-                <button id="disconnectWallet" class="btn btn-secondary" style="margin-top: 10px; display: none;">Disconnect</button>
-            </div>
-        </div>
-
-        <div class="contracts-section">
-            <h2>Smart Contracts</h2>
-            
-            <!-- Fee Generator -->
-            <div class="contract-card">
-                <h3>💰 Fee Generator</h3>
-                <div class="stats">
-                    <div class="stat-item">
-                        <span class="stat-label">Total Fees:</span>
-                        <span id="totalFees" class="stat-value">0 ETH</span>
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Wallet Status -->
+            <div id="walletStatus" class="wallet-status hidden">
+                <div class="status-card">
+                    <div class="status-header">
+                        <span class="status-icon">✓</span>
+                        <h3>Wallet Connected</h3>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Your Balance:</span>
-                        <span id="userBalance" class="stat-value">0 ETH</span>
+                    <div class="status-info">
+                        <p><strong>Address:</strong> <span id="walletAddr" class="address"></span></p>
+                        <p><strong>Balance:</strong> <span id="walletBal" class="balance">0 ETH</span></p>
                     </div>
-                </div>
-                <div class="actions">
-                    <input type="number" id="depositAmount" placeholder="Amount (ETH)" step="0.001" min="0.001">
-                    <button id="depositBtn" class="btn btn-action">Deposit</button>
-                    <input type="number" id="withdrawAmount" placeholder="Amount (ETH)" step="0.001" min="0.001">
-                    <button id="withdrawBtn" class="btn btn-action">Withdraw</button>
+                    <button id="disconnectBtn" class="disconnect-btn">Disconnect</button>
                 </div>
             </div>
 
-            <!-- NFT Minting -->
-            <div class="contract-card">
-                <h3>🎨 Mint NFT</h3>
-                <div class="stats">
-                    <div class="stat-item">
-                        <span class="stat-label">NFT Fees:</span>
-                        <span id="nftFees" class="stat-value">0 ETH</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Your NFTs:</span>
-                        <span id="userNFTs" class="stat-value">0</span>
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-content">
+                        <h3>Total Fees</h3>
+                        <p class="stat-value" id="totalFees">0 ETH</p>
                     </div>
                 </div>
-                <div class="actions">
-                    <input type="text" id="nftURI" placeholder="Token URI (optional)">
-                    <button id="mintNFTBtn" class="btn btn-action">Mint NFT</button>
-                    <small class="mint-price">Price: 0.001 ETH</small>
+                <div class="stat-card">
+                    <div class="stat-icon">💎</div>
+                    <div class="stat-content">
+                        <h3>Your Balance</h3>
+                        <p class="stat-value" id="userBalance">0 ETH</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎨</div>
+                    <div class="stat-content">
+                        <h3>Your NFTs</h3>
+                        <p class="stat-value" id="userNFTs">0</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔥</div>
+                    <div class="stat-content">
+                        <h3>NFT Fees</h3>
+                        <p class="stat-value" id="nftFees">0 ETH</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="transactions-section">
-            <h2>Recent Transactions</h2>
-            <div id="transactions" class="transactions-list"></div>
-        </div>
+            <!-- Actions -->
+            <div class="actions-section">
+                <!-- Deposit -->
+                <div class="action-card">
+                    <h2>💵 Deposit</h2>
+                    <div class="action-form">
+                        <input type="number" id="depositInput" placeholder="Amount (ETH)" step="0.001" min="0.001" class="input-field">
+                        <button id="depositBtn" class="action-btn">Deposit</button>
+                    </div>
+                </div>
 
-        <footer>
+                <!-- Withdraw -->
+                <div class="action-card">
+                    <h2>💸 Withdraw</h2>
+                    <div class="action-form">
+                        <input type="number" id="withdrawInput" placeholder="Amount (ETH)" step="0.001" min="0.001" class="input-field">
+                        <button id="withdrawBtn" class="action-btn">Withdraw</button>
+                    </div>
+                </div>
+
+                <!-- Mint NFT -->
+                <div class="action-card">
+                    <h2>🎨 Mint NFT</h2>
+                    <div class="action-form">
+                        <input type="text" id="nftURIInput" placeholder="Token URI (optional)" class="input-field">
+                        <button id="mintBtn" class="action-btn">Mint NFT (0.001 ETH)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions -->
+            <div class="transactions-section">
+                <h2>📋 Recent Transactions</h2>
+                <div id="transactionsList" class="transactions-list"></div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
             <p>Built for Base Builders December Program</p>
-            <p>
-                <a href="https://docs.base.org/mini-apps/" target="_blank">Base Mini Apps Docs</a> | 
+            <div class="footer-links">
+                <a href="https://docs.base.org/mini-apps/" target="_blank">Docs</a>
                 <a href="https://talent.app/~/earn/base-december" target="_blank">Talent.app</a>
-            </p>
+            </div>
         </footer>
     </div>
-    
-    <!-- WalletConnect Modal -->
-    <div id="walletModal" class="wallet-modal hidden">
-        <div class="wallet-modal-content">
-            <div class="wallet-modal-header">
-                <h2>Connect Wallet</h2>
-                <button class="wallet-modal-close" id="closeWalletModal">&times;</button>
-            </div>
-            <div class="wallet-modal-body">
-                <!-- WalletConnect QR Code -->
-                <div class="wallet-option-section">
-                    <div class="wallet-option-header">
-                        <h3>WalletConnect</h3>
-                        <div id="walletConnectQR" class="qr-code-container">
-                            <div class="qr-loading">Loading QR Code...</div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Installed Wallets -->
-                <div class="wallet-option-section">
-                    <h3>Installed</h3>
-                    <div class="wallet-list" id="installedWallets">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-
-                <!-- Popular Wallets -->
-                <div class="wallet-option-section">
-                    <h3>Popular</h3>
-                    <div class="wallet-list" id="popularWallets">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-
-                <!-- Email/Google Login -->
-                <div class="wallet-option-section">
-                    <h3>or</h3>
-                    <div class="social-login">
-                        <button class="btn-social btn-google" id="googleLogin">
-                            <span>🔵</span> Continue with Google
-                        </button>
-                        <button class="btn-social btn-email" id="emailLogin">
-                            <span>✉️</span> Continue with Email
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Footer -->
-                <div class="wallet-modal-footer">
-                    <p>UX by <a href="https://reown.com" target="_blank">Reown</a></p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Load scripts at the end -->
+    <!-- Scripts -->
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
     <script src="config.js"></script>
-    <script src="app.js" defer></script>
+    <script src="app.js"></script>
 </body>
 </html>
