@@ -95,6 +95,18 @@ header h1 {
     transform: translateY(-2px);
 }
 
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+    font-size: 0.9em;
+    padding: 8px 16px;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
 .btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;

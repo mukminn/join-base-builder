@@ -9,45 +9,13 @@
     <meta property="og:title" content="Base Builders December - Mini App">
     <meta property="og:description" content="Mini App untuk Base Builders December program">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="https://your-domain.com/og-image.png">
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
     <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <!-- WalletConnect v3 (Reown) -->
+    <script type="module" src="https://unpkg.com/@walletconnect/ethereum-provider@2.15.0/dist/index.umd.js"></script>
 </head>
 <body>
-    <!-- Inline script untuk immediate button setup -->
-    <script>
-        // Immediate setup untuk connect button - non-blocking
-        (function() {
-            function setupButton() {
-                const btn = document.getElementById('connectWallet');
-                if (btn && !btn.dataset.setup) {
-                    btn.onclick = function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        showWalletModal();
-                        return false;
-                    };
-                    btn.dataset.setup = 'true';
-                    console.log('Connect button ready');
-                }
-            }
-            
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', setupButton);
-            } else {
-                setTimeout(setupButton, 50);
-            }
-        })();
-        
-        // Expose showWalletModal globally
-        window.showWalletModal = function() {
-            const modal = document.getElementById('walletModal');
-            if (modal) {
-                modal.classList.remove('hidden');
-            }
-        };
-    </script>
     <div class="container">
         <header>
             <h1>🚀 Base Builders December</h1>
@@ -59,46 +27,7 @@
             <div id="walletInfo" class="wallet-info hidden">
                 <p>Connected: <span id="walletAddress"></span></p>
                 <p>Balance: <span id="walletBalance">0</span> ETH</p>
-            </div>
-        </div>
-
-        <!-- Wallet Selection Modal -->
-        <div id="walletModal" class="wallet-modal hidden">
-            <div class="wallet-modal-content">
-                <div class="wallet-modal-header">
-                    <h2>Hubungkan Dompet</h2>
-                    <button class="wallet-modal-close" id="closeWalletModal">&times;</button>
-                </div>
-                <div class="wallet-modal-body">
-                    <div class="wallet-modal-left">
-                        <h3>Terinstal</h3>
-                        <div class="wallet-list" id="installedWallets">
-                            <!-- Will be populated by JS -->
-                        </div>
-                        
-                        <h3>Populer</h3>
-                        <div class="wallet-list" id="popularWallets">
-                            <!-- Will be populated by JS -->
-                        </div>
-                    </div>
-                    <div class="wallet-modal-right">
-                        <h3>Apa itu Dompet?</h3>
-                        <div class="wallet-info-card">
-                            <div class="info-item">
-                                <div class="info-icon">🏠</div>
-                                <h4>Sebuah Rumah untuk Aset Digital Anda</h4>
-                                <p>Dompet digunakan untuk mengirim, menerima, menyimpan, dan menampilkan aset digital seperti Ethereum dan NFTs.</p>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-icon">🔐</div>
-                                <h4>Cara Baru untuk Masuk</h4>
-                                <p>Alih-alih membuat akun dan kata sandi baru di setiap situs web, cukup hubungkan dompet Anda.</p>
-                            </div>
-                        </div>
-                        <button class="btn-get-wallet" onclick="window.open('https://metamask.io/download/', '_blank')">Dapatkan Dompet</button>
-                        <a href="https://ethereum.org/en/wallets/" target="_blank" class="learn-more">Pelajari lebih lanjut</a>
-                    </div>
-                </div>
+                <button id="disconnectWallet" class="btn btn-secondary" style="margin-top: 10px; display: none;">Disconnect</button>
             </div>
         </div>
 
