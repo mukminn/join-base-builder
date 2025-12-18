@@ -78,17 +78,19 @@ const server = http.createServer((req, res) => {
     });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, 'localhost', () => {
     console.log(`\n🚀 Server running at http://localhost:${PORT}/`);
     console.log(`📱 Open in browser: http://localhost:${PORT}/\n`);
+    console.log(`📂 Serving from: ${SERVE_DIR}\n`);
     console.log('Press Ctrl+C to stop the server\n');
 }).on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
         console.error(`\n❌ Port ${PORT} is already in use!`);
         console.log(`💡 Try using a different port:`);
-        console.log(`   PORT=9001 node mini-app/server.js\n`);
+        console.log(`   PORT=9001 cd mini-app && node server.js\n`);
         process.exit(1);
     } else {
+        console.error(`\n❌ Server error: ${err.message}`);
         throw err;
     }
 });
