@@ -284,14 +284,23 @@ function selectWallet(walletId) {
     }
 }
 
+// Expose globally
+window.selectWallet = selectWallet;
+
 function installWallet() {
     window.open('https://metamask.io/download/', '_blank');
 }
+
+// Expose globally
+window.installWallet = installWallet;
 
 function connectMetaMask() {
     // Use existing connectWallet function
     connectWallet();
 }
+
+// Expose globally
+window.connectMetaMask = connectMetaMask;
 
 async function connectWallet() {
     console.log('=== Connect wallet function called ===');
