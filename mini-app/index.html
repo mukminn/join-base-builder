@@ -15,6 +15,26 @@
     <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
 </head>
 <body>
+    <!-- Inline script untuk immediate button setup -->
+    <script>
+        // Immediate setup untuk connect button
+        window.addEventListener('load', function() {
+            const btn = document.getElementById('connectWallet');
+            if (btn) {
+                btn.onclick = function() {
+                    if (window.connectWallet) {
+                        window.connectWallet();
+                    } else {
+                        console.error('connectWallet function not loaded yet');
+                        setTimeout(function() {
+                            if (window.connectWallet) window.connectWallet();
+                        }, 500);
+                    }
+                };
+                console.log('Connect button ready');
+            }
+        });
+    </script>
     <div class="container">
         <header>
             <h1>🚀 Base Builders December</h1>

@@ -43,6 +43,9 @@ let feeGeneratorContract;
 let nftContract;
 let userAddress;
 
+// Make connectWallet globally accessible
+window.connectWallet = connectWallet;
+
 // Initialize - Wait for DOM and scripts to be ready
 (function() {
     function init() {
@@ -130,36 +133,47 @@ async function addBaseNetwork() {
 function setupEventListeners() {
     console.log('Setting up event listeners...');
     
-    // Remove old listeners first
     const connectBtn = document.getElementById('connectWallet');
     const depositBtn = document.getElementById('depositBtn');
     const withdrawBtn = document.getElementById('withdrawBtn');
     const mintBtn = document.getElementById('mintNFTBtn');
     
     if (connectBtn) {
-        // Clone and replace to remove old listeners
+        // Remove all existing listeners by cloning
         const newBtn = connectBtn.cloneNode(true);
         connectBtn.parentNode.replaceChild(newBtn, connectBtn);
         
-        // Add new listener
+        // Multiple ways to ensure click works
         newBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('Button clicked!');
-            connectWallet();
-        });
+            console.log('✅ Button clicked via addEventListener');
+            if (typeof connectWallet === 'function') {
+                connectWallet();
+            } else {
+                console.error('connectWallet is not a function');
+            }
+        }, { once: false, capture: false });
         
-        // Also add onclick as fallback
+        // Direct onclick as primary method
         newBtn.onclick = function(e) {
             e.preventDefault();
             e.stopPropagation();
-            connectWallet();
+            console.log('✅ Button clicked via onclick');
+            if (typeof connectWallet === 'function') {
+                connectWallet();
+            } else {
+                console.error('connectWallet is not a function');
+            }
+            return false;
         };
         
-        console.log('Connect wallet button listener added');
+        // Also expose globally
+        window.connectWalletBtn = newBtn;
+        
+        console.log('✅ Connect wallet button listener added');
     } else {
-        console.error('Connect wallet button not found!');
-        // Retry after a short delay
+        console.error('❌ Connect wallet button not found!');
         setTimeout(setupEventListeners, 500);
     }
     
@@ -178,13 +192,12 @@ function setupEventListeners() {
 
 async function connectWallet() {
     console.log('=== Connect wallet function called ===');
+    console.log('window.ethereum:', typeof window.ethereum);
     
     // Check if MetaMask is installed
     if (typeof window.ethereum === 'undefined') {
-        const install = confirm('MetaMask tidak terdeteksi!\n\nKlik OK untuk install MetaMask.');
-        if (install) {
-            window.open('https://metamask.io/download/', '_blank');
-        }
+        alert('MetaMask tidak terdeteksi!\n\nSilakan install MetaMask terlebih dahulu.');
+        window.open('https://metamask.io/download/', '_blank');
         return;
     }
     
