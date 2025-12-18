@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base Builders December - Mini App</title>
+    <meta name="description" content="Mini App untuk Base Builders December - Interact dengan smart contracts untuk generate fees">
+    <meta name="keywords" content="base, ethereum, defi, nft, mini app">
+    <meta property="og:title" content="Base Builders December - Mini App">
+    <meta property="og:description" content="Mini App untuk Base Builders December program">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://your-domain.com/og-image.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <script src="config.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Base Builders December</h1>
+            <p class="subtitle">Mini App untuk Base Ecosystem</p>
+        </header>
+
+        <div class="wallet-section">
+            <button id="connectWallet" class="btn btn-primary">Connect Wallet</button>
+            <div id="walletInfo" class="wallet-info hidden">
+                <p>Connected: <span id="walletAddress"></span></p>
+                <p>Balance: <span id="walletBalance">0</span> ETH</p>
+            </div>
+        </div>
+
+        <div class="contracts-section">
+            <h2>Smart Contracts</h2>
+            
+            <!-- Fee Generator -->
+            <div class="contract-card">
+                <h3>💰 Fee Generator</h3>
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Fees:</span>
+                        <span id="totalFees" class="stat-value">0 ETH</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Your Balance:</span>
+                        <span id="userBalance" class="stat-value">0 ETH</span>
+                    </div>
+                </div>
+                <div class="actions">
+                    <input type="number" id="depositAmount" placeholder="Amount (ETH)" step="0.001" min="0.001">
+                    <button id="depositBtn" class="btn btn-action">Deposit</button>
+                    <input type="number" id="withdrawAmount" placeholder="Amount (ETH)" step="0.001" min="0.001">
+                    <button id="withdrawBtn" class="btn btn-action">Withdraw</button>
+                </div>
+            </div>
+
+            <!-- NFT Minting -->
+            <div class="contract-card">
+                <h3>🎨 Mint NFT</h3>
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-label">NFT Fees:</span>
+                        <span id="nftFees" class="stat-value">0 ETH</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Your NFTs:</span>
+                        <span id="userNFTs" class="stat-value">0</span>
+                    </div>
+                </div>
+                <div class="actions">
+                    <input type="text" id="nftURI" placeholder="Token URI (optional)">
+                    <button id="mintNFTBtn" class="btn btn-action">Mint NFT</button>
+                    <small class="mint-price">Price: 0.001 ETH</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="transactions-section">
+            <h2>Recent Transactions</h2>
+            <div id="transactions" class="transactions-list"></div>
+        </div>
+
+        <footer>
+            <p>Built for Base Builders December Program</p>
+            <p>
+                <a href="https://docs.base.org/mini-apps/" target="_blank">Base Mini Apps Docs</a> | 
+                <a href="https://talent.app/~/earn/base-december" target="_blank">Talent.app</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

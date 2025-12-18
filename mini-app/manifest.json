@@ -1,0 +1,26 @@
+{
+  "name": "Base Builders December",
+  "description": "Mini App untuk Base Builders December program - Interact dengan smart contracts untuk generate fees",
+  "version": "1.0.0",
+  "icon": "https://your-domain.com/icon.png",
+  "splash": "https://your-domain.com/splash.png",
+  "url": "https://your-domain.com",
+  "builder": "YOUR_BASE_BUILDER_ADDRESS",
+  "category": "DeFi",
+  "tags": ["base", "defi", "nft", "fees"],
+  "features": [
+    "wallet-connect",
+    "onchain-transactions",
+    "nft-minting",
+    "fee-tracking"
+  ],
+  "networks": ["base", "base-sepolia"],
+  "contracts": {
+    "feeGenerator": "0x33b5b0136bD1812E644eBC089af88706C9A3815d",
+    "simpleNFT": "YOUR_NFT_CONTRACT_ADDRESS"
+  },
+  "social": {
+    "twitter": "https://twitter.com/your-handle",
+    "github": "https://github.com/mukminn/join-base-builder"
+  }
+}
