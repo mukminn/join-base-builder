@@ -15,7 +15,18 @@ echo.
 cd /d "%~dp0"
 
 echo Deploying to Vercel...
-vercel --prod
+echo.
+echo Pilih opsi:
+echo 1. Link ke project yang sudah ada (join-base-builder)
+echo 2. Deploy langsung
+echo.
+echo Jika belum link, akan diminta:
+echo - Project name: join-base-builder
+echo - Root directory: mini-app
+echo.
+pause
+
+vercel --prod --yes
 
 echo.
 echo ========================================
